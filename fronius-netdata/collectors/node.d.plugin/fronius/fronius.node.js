@@ -211,7 +211,7 @@ var fronius = {
         return chart;
     },
 
-	// Gets the temperature_x chart. Will be created if not existing.
+    // Gets the temperature_x chart. Will be created if not existing.
     getTemperatureChart: function (service, suffix, chartTitle, temperatureId, chartPriority) {
         var chartId = this.getChartId(service, suffix);
         var chart = fronius.charts[chartId];
@@ -236,7 +236,7 @@ var fronius = {
         return chart;
     },
 
-	// Gets the watts per square meter chart. Will be created if not existing.
+    // Gets the watts per square meter chart. Will be created if not existing.
     getWattsPerSqm: function (service, suffix) {
         var chartId = this.getChartId(service, suffix);
         var chart = fronius.charts[chartId];
@@ -261,7 +261,7 @@ var fronius = {
         return chart;
     },
 
-	// Gets the wind speed chart. Will be created if not existing.
+    // Gets the wind speed chart. Will be created if not existing.
     getWindSpeed: function (service, suffix) {
         var chartId = this.getChartId(service, suffix);
         var chart = fronius.charts[chartId];
