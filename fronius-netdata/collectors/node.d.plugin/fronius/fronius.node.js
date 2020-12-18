@@ -212,8 +212,8 @@ var fronius = {
     },
 
 	// Gets the temperature_x chart. Will be created if not existing.
-	getTemperatureChart: function (service, suffix, chartTitle, temperatureId, chartPriority) {
-	    var chartId = this.getChartId(service, suffix);
+    getTemperatureChart: function (service, suffix, chartTitle, temperatureId, chartPriority) {
+        var chartId = this.getChartId(service, suffix);
         var chart = fronius.charts[chartId];
         if (fronius.isDefined(chart)) return chart;
 
@@ -237,8 +237,8 @@ var fronius = {
 	},
 
 	// Gets the watts per square meter chart. Will be created if not existing.
-	getWattsPerSqm: function (service, suffix) {
-	    var chartId = this.getChartId(service, suffix);
+    getWattsPerSqm: function (service, suffix) {
+        var chartId = this.getChartId(service, suffix);
         var chart = fronius.charts[chartId];
         if (fronius.isDefined(chart)) return chart;
 
@@ -262,8 +262,8 @@ var fronius = {
 	},
 
 	// Gets the wind speed chart. Will be created if not existing.
-	getWindSpeed: function (service, suffix) {
-	    var chartId = this.getChartId(service, suffix);
+    getWindSpeed: function (service, suffix) {
+        var chartId = this.getChartId(service, suffix);
         var chart = fronius.charts[chartId];
         if (fronius.isDefined(chart)) return chart;
 
@@ -313,12 +313,12 @@ var fronius = {
     },
 
     parseSensorCharts: function (service, json) {
-		var measurements = json.Body.Data;
+        var measurements = json.Body.Data;
         return [
-			this.getChart(this.getTemperatureChart(service, "temperature.top.output", "Top temperature", this.sensor_temperature_top, 7), [this.getDimension(this.sensor_temperature_top, measurements["0"].Value)]),
-			this.getChart(this.getTemperatureChart(service, "temperature.bottom.output", "Bottom temperature", this.sensor_temperature_bottom, 8), [this.getDimension(this.sensor_temperature_bottom, measurements["1"].Value)]),
-			this.getChart(this.getWattsPerSqm(service, "watts.per.sqm.output"), [this.getDimension(this.wattsPerSqm, measurements["2"].Value)]),
-			this.getChart(this.getWindSpeed(service, "wind.speed.output"), [this.getDimension(this.windSpeed, measurements["3"].Value)])
+            this.getChart(this.getTemperatureChart(service, "temperature.top.output", "Top temperature", this.sensor_temperature_top, 7), [this.getDimension(this.sensor_temperature_top, measurements["0"].Value)]),
+            this.getChart(this.getTemperatureChart(service, "temperature.bottom.output", "Bottom temperature", this.sensor_temperature_bottom, 8), [this.getDimension(this.sensor_temperature_bottom, measurements["1"].Value)]),
+            this.getChart(this.getWattsPerSqm(service, "watts.per.sqm.output"), [this.getDimension(this.wattsPerSqm, measurements["2"].Value)]),
+            this.getChart(this.getWindSpeed(service, "wind.speed.output"), [this.getDimension(this.windSpeed, measurements["3"].Value)])
         ];
     },
 
