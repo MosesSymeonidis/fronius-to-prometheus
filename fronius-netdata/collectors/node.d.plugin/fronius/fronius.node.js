@@ -28,10 +28,10 @@ var fronius = {
     solarConsumptionId: "solar_consumption",
     energyTodayId: "e_day",
     energyYearId: "e_year",
-	temperatureTopId: "sensor_temperature_top",
-	temperatureBottomId: "sensor_temperature_bottom",
-	wattsPerSqm: "sensor_watts_per_sqm",
-	windSpeed: "sensor_wind_speed",
+    temperatureTopId: "sensor_temperature_top",
+    temperatureBottomId: "sensor_temperature_bottom",
+    wattsPerSqm: "sensor_watts_per_sqm",
+    windSpeed: "sensor_wind_speed",
 
     createBasicDimension: function (id, name, divisor) {
         return {
