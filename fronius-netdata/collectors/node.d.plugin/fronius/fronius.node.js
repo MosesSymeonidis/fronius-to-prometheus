@@ -234,7 +234,7 @@ var fronius = {
         fronius.charts[chartId] = chart;
 
         return chart;
-	},
+    },
 
 	// Gets the watts per square meter chart. Will be created if not existing.
     getWattsPerSqm: function (service, suffix) {
@@ -259,7 +259,7 @@ var fronius = {
         fronius.charts[chartId] = chart;
 
         return chart;
-	},
+    },
 
 	// Gets the wind speed chart. Will be created if not existing.
     getWindSpeed: function (service, suffix) {
@@ -284,7 +284,7 @@ var fronius = {
         fronius.charts[chartId] = chart;
 
         return chart;
-	},
+    },
 
     processResponse: function (service, content) {
         var json = fronius.convertToJson(service, content);
