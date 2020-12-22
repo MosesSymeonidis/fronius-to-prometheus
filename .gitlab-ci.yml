@@ -1,5 +1,5 @@
 variables:
-  PACKAGE_PATH: /go/src/gitlab.com/enedi/fronius-netdata/fronius-netdata/packaging/docker
+  PACKAGE_PATH: /go/src/gitlab.com/enedi/fronius-netdata/fronius-netdata
 
 stages:
   - build
@@ -10,6 +10,6 @@ build:
   services:
     - docker:dind
   script:
-    - docker build -t registry.gitlab.com/enedi/fronius-netdata/fronius-netdata ./packaging/docker
+    - docker build -t registry.gitlab.com/enedi/fronius-netdata/fronius-netdata .
     - docker login -u gitlab-ci-token -p $CI_BUILD_TOKEN registry.gitlab.com
     - docker push registry.gitlab.com/enedi/fronius-netdata/fronius-netdata
