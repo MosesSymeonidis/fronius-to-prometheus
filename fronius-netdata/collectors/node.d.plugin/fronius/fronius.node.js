@@ -495,3 +495,4 @@ var fronius = {
 };
 
 module.exports = fronius;
+
