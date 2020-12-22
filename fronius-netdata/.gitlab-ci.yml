@@ -10,6 +10,6 @@ build:
   services:
     - docker:dind
   script:
-    - docker build -t registry.gitlab.com/enedi/fronius-netdata .
+    - docker build -t registry.gitlab.com/enedi/fronius-netdata/fronius-netdata .
     - docker login -u gitlab-ci-token -p $CI_BUILD_TOKEN registry.gitlab.com
-    - docker push registry.gitlab.com/enedi/fronius-netdata
+    - docker push registry.gitlab.com/enedi/fronius-netdata/fronius-netdata
