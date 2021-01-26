@@ -109,8 +109,6 @@ extern int ebpf_nprocs;
 extern int running_on_kernel;
 extern char *ebpf_plugin_dir;
 extern char kernel_string[64];
-extern netdata_ebpf_events_t process_probes[];
-extern netdata_ebpf_events_t socket_probes[];
 
 extern pthread_mutex_t collect_data_mutex;
 extern pthread_cond_t collect_data_cond_var;
@@ -167,10 +165,10 @@ extern void write_end_chart();
 
 #define EBPF_GLOBAL_SECTION "global"
 #define EBPF_PROGRAMS_SECTION "ebpf programs"
-#define EBPF_NETWORK_VIEWER_SECTION "network viewer"
+#define EBPF_NETWORK_VIEWER_SECTION "network connections"
 #define EBPF_SERVICE_NAME_SECTION "service name"
 
-#define EBPF_COMMON_DIMENSION_CALL "calls"
+#define EBPF_COMMON_DIMENSION_CALL "calls/s"
 #define EBPF_COMMON_DIMENSION_BYTESS "bytes/s"
 #define EBPF_COMMON_DIMENSION_DIFFERENCE "difference"
 #define EBPF_COMMON_DIMENSION_PACKETS "packets"
@@ -192,9 +190,5 @@ extern int update_every;
 extern uint32_t finalized_threads;
 
 #define EBPF_MAX_SYNCHRONIZATION_TIME 300
-
-// External functions
-extern void change_socket_event();
-extern void change_process_event();
 
 #endif /* NETDATA_COLLECTOR_EBPF_H */

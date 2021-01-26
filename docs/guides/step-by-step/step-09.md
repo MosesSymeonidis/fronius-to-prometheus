@@ -116,9 +116,10 @@ use netdata
 db.createCollection("netdata_metrics")
 ```
 
-Next, Netdata needs to be reinstalled in order to detect that the required libraries to make this exporting connection
-exist. Since you most likely installed Netdata using the one-line installer script, all you have to do is run that
-script again. Don't worry—any configuration changes you made along the way will be retained!
+Next, Netdata needs to be [reinstalled](/packaging/installer/REINSTALL.md) in order to detect that the required
+libraries to make this exporting connection exist. Since you most likely installed Netdata using the one-line installer
+script, all you have to do is run that script again. Don't worry—any configuration changes you made along the way will
+be retained!
 
 ```bash
 bash <(curl -Ss https://my-netdata.io/kickstart.sh)
@@ -142,7 +143,7 @@ Add the following section to the file:
 ```
 
 [Restart](/docs/getting-started.md#start-stop-and-restart-netdata) Netdata to enable the MongoDB exporting connector.
-Click on the **Netdata Montioring** menu and check out the **exporting my mongo instance** sub-menu. You should start
+Click on the **Netdata Monitoring** menu and check out the **exporting my mongo instance** sub-menu. You should start
 seeing these charts fill up with data about the exporting process!
 
 ![image](https://user-images.githubusercontent.com/1153921/70443852-25171200-1a56-11ea-8be3-494544b1c295.png)

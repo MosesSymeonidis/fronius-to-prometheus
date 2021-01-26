@@ -590,6 +590,7 @@ set(RRD_PLUGIN_FILES
         database/rrddimvar.h
         database/rrdfamily.c
         database/rrdhost.c
+        database/rrdlabels.c
         database/rrd.c
         database/rrd.h
         database/rrdset.c
@@ -597,6 +598,10 @@ set(RRD_PLUGIN_FILES
         database/rrdsetvar.h
         database/rrdvar.c
         database/rrdvar.h
+        database/sqlite/sqlite_functions.c
+        database/sqlite/sqlite_functions.h
+        database/sqlite/sqlite3.c
+        database/sqlite/sqlite3.h
         database/engine/rrdengine.c
         database/engine/rrdengine.h
         database/engine/rrddiskprotocol.h
@@ -612,7 +617,6 @@ set(RRD_PLUGIN_FILES
         database/engine/pagecache.h
         database/engine/rrdenglocking.c
         database/engine/rrdenglocking.h
-        database/engine/metadata_log/metadatalog.c
         database/engine/metadata_log/metadatalog.h
         database/engine/metadata_log/metadatalogapi.c
         database/engine/metadata_log/metadatalogapi.h
@@ -623,8 +627,6 @@ set(RRD_PLUGIN_FILES
         database/engine/metadata_log/metalogpluginsd.h
         database/engine/metadata_log/compaction.c
         database/engine/metadata_log/compaction.h
-        database/engine/global_uuid_map/global_uuid_map.c
-        database/engine/global_uuid_map/global_uuid_map.h
         )
 
 set(WEB_PLUGIN_FILES
@@ -711,25 +713,26 @@ set(BACKENDS_PLUGIN_FILES
 set(CLAIM_PLUGIN_FILES
         claim/claim.c
         claim/claim.h
-        aclk/aclk_common.c
-        aclk/aclk_common.h
+        aclk/legacy/aclk_rrdhost_state.h
+        aclk/legacy/aclk_common.c
+        aclk/legacy/aclk_common.h
         )
 
 set(ACLK_PLUGIN_FILES
-        aclk/agent_cloud_link.c
-        aclk/agent_cloud_link.h
-        aclk/aclk_query.c
-        aclk/aclk_query.h
-        aclk/aclk_lws_wss_client.c
-        aclk/aclk_lws_wss_client.h
-        aclk/aclk_lws_https_client.c
-        aclk/aclk_lws_https_client.h
-        aclk/mqtt.c
-        aclk/mqtt.h
-        aclk/aclk_stats.c
-        aclk/aclk_stats.h
-        aclk/aclk_rx_msgs.c
-        aclk/aclk_rx_msgs.h
+        aclk/legacy/agent_cloud_link.c
+        aclk/legacy/agent_cloud_link.h
+        aclk/legacy/aclk_query.c
+        aclk/legacy/aclk_query.h
+        aclk/legacy/aclk_lws_wss_client.c
+        aclk/legacy/aclk_lws_wss_client.h
+        aclk/legacy/aclk_lws_https_client.c
+        aclk/legacy/aclk_lws_https_client.h
+        aclk/legacy/mqtt.c
+        aclk/legacy/mqtt.h
+        aclk/legacy/aclk_stats.c
+        aclk/legacy/aclk_stats.h
+        aclk/legacy/aclk_rx_msgs.c
+        aclk/legacy/aclk_rx_msgs.h
         )
 
 set(SPAWN_PLUGIN_FILES
@@ -1293,6 +1296,7 @@ endif()
         -Wl,--wrap=web_client_api_request_v1
         -Wl,--wrap=rrdhost_find_by_guid
         -Wl,--wrap=rrdset_find_byname
+        -Wl,--wrap=sql_create_host_by_uuid
         -Wl,--wrap=rrdset_find
         -Wl,--wrap=rrdpush_receiver_thread_spawn
         -Wl,--wrap=debug_int
@@ -1317,6 +1321,7 @@ endif()
         -Wl,--wrap=web_client_api_request_v1
         -Wl,--wrap=rrdhost_find_by_guid
         -Wl,--wrap=rrdset_find_byname
+        -Wl,--wrap=sql_create_host_by_uuid
         -Wl,--wrap=rrdset_find
         -Wl,--wrap=rrdpush_receiver_thread_spawn
         -Wl,--wrap=debug_int
@@ -1329,12 +1334,29 @@ endif()
     target_link_libraries(valid_urls_testdriver libnetdata ${NETDATA_COMMON_LIBRARIES} ${CMOCKA_LIBRARIES})
 #    add_test(NAME test_valid_urls COMMAND valid_urls_testdriver)
 
+    set(CGROUPS_TEST_FILES
+        collectors/cgroups.plugin/tests/test_cgroups_plugin.c
+        collectors/cgroups.plugin/tests/test_cgroups_plugin.h
+        collectors/cgroups.plugin/tests/test_doubles.c
+        database/rrdlabels.c
+        database/rrd.h
+    )
+    add_executable(cgroups_testdriver ${CGROUPS_TEST_FILES} ${CGROUPS_PLUGIN_FILES})
+    target_link_options(
+        cgroups_testdriver
+        PRIVATE
+        -Wl,--wrap=add_label_to_list
+    )
+    target_link_libraries(cgroups_testdriver libnetdata ${NETDATA_COMMON_LIBRARIES} ${CMOCKA_LIBRARIES})
+    add_test(NAME test_cgroups COMMAND cgroups_testdriver)
+
     set_target_properties(
         str2ld_testdriver
         storage_number_testdriver
         exporting_engine_testdriver
         web_api_testdriver
         valid_urls_testdriver
+        cgroups_testdriver
         PROPERTIES RUNTIME_OUTPUT_DIRECTORY tests
     )
 

@@ -1549,7 +1549,6 @@ AC_CONFIG_FILES([
     database/Makefile
     database/engine/Makefile
     database/engine/metadata_log/Makefile
-    database/engine/global_uuid_map/Makefile
     diagrams/Makefile
     exporting/Makefile
     exporting/graphite/Makefile
@@ -1616,7 +1615,7 @@ AC_CONFIG_FILES([
     web/server/Makefile
     web/server/static/Makefile
     claim/Makefile
-    aclk/Makefile
+    aclk/legacy/Makefile
     spawn/Makefile
     parser/Makefile
 ])

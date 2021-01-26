@@ -619,6 +619,27 @@ build_libwebsockets() {
   fi
 
   pushd "${1}" > /dev/null || exit 1
+
+  if [ "$(uname)" = "Darwin" ]; then
+    run patch -p1 << "EOF"
+--- a/lib/plat/unix/private.h
++++ b/lib/plat/unix/private.h
+@@ -164,6 +164,8 @@ delete_from_fd(const struct lws_context *context, int fd);
+  * but happily have something equivalent in the SO_NOSIGPIPE flag.
+  */
+ #ifdef __APPLE__
++/* iOS SDK 12+ seems to define it, undef it for compatibility both ways */
++#undef MSG_NOSIGNAL
+ #define MSG_NOSIGNAL SO_NOSIGPIPE
+ #endif
+EOF
+
+    # shellcheck disable=SC2181
+    if [ $? -ne 0 ]; then
+      return 1
+    fi
+  fi
+
   if [ "$(uname)" = "Darwin" ] && [ -d /usr/local/opt/openssl ]; then
     run ${env_cmd} cmake \
       -D OPENSSL_ROOT_DIR=/usr/local/opt/openssl \
@@ -695,13 +716,18 @@ bundle_libwebsockets
 
 build_judy() {
   local env_cmd=''
+  local libtoolize="libtoolize"
 
   if [ -z "${DONT_SCRUB_CFLAGS_EVEN_THOUGH_IT_MAY_BREAK_THINGS}" ]; then
     env_cmd="env CFLAGS=-fPIC CXXFLAGS= LDFLAGS="
   fi
 
+  if [ "$(uname)" = "Darwin" ]; then
+    libtoolize="glibtoolize"
+  fi
+
   pushd "${1}" > /dev/null || return 1
-  if run ${env_cmd} libtoolize --force --copy &&
+  if run ${env_cmd} ${libtoolize} --force --copy &&
     run ${env_cmd} aclocal &&
     run ${env_cmd} autoheader &&
     run ${env_cmd} automake --add-missing --force --copy --include-deps &&
@@ -1582,6 +1608,14 @@ remove_old_ebpf() {
     echo >&2 "Renaming eBPF configuration file."
     mv "${NETDATA_PREFIX}/etc/netdata/ebpf_process.conf" "${NETDATA_PREFIX}/etc/netdata/ebpf.conf"
   fi
+
+  # Added to remove eBPF programs with name pattern: NAME_VERSION.SUBVERSION.PATCH 
+  if [ -f "${NETDATA_PREFIX}/usr/libexec/netdata/plugins.d/pnetdata_ebpf_process.3.10.0.o" ]; then
+    echo >&2 "Removing old eBPF programs"
+    rm -f "${NETDATA_PREFIX}/usr/libexec/netdata/plugins.d/rnetdata_ebpf"*.?.*.*.o
+    rm -f "${NETDATA_PREFIX}/usr/libexec/netdata/plugins.d/pnetdata_ebpf"*.?.*.*.o
+  fi
+
 }
 
 install_ebpf() {
@@ -1840,6 +1874,7 @@ cat << EOF > "${NETDATA_USER_CONFIG_DIR}/.environment"
 PATH="${PATH}"
 CFLAGS="${CFLAGS}"
 LDFLAGS="${LDFLAGS}"
+NETDATA_TMPDIR="${TMPDIR}"
 NETDATA_PREFIX="${NETDATA_PREFIX}"
 NETDATA_CONFIGURE_OPTIONS="${NETDATA_CONFIGURE_OPTIONS}"
 NETDATA_ADDED_TO_GROUPS="${NETDATA_ADDED_TO_GROUPS}"

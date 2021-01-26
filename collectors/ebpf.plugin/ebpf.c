@@ -75,43 +75,15 @@ pthread_mutex_t lock;
 pthread_mutex_t collect_data_mutex;
 pthread_cond_t collect_data_cond_var;
 
-netdata_ebpf_events_t process_probes[] = {
-    { .type = 'r', .name = "vfs_write" },
-    { .type = 'r', .name = "vfs_writev" },
-    { .type = 'r', .name = "vfs_read" },
-    { .type = 'r', .name = "vfs_readv" },
-    { .type = 'r', .name = "do_sys_open" },
-    { .type = 'r', .name = "vfs_unlink" },
-    { .type = 'p', .name = "do_exit" },
-    { .type = 'p', .name = "release_task" },
-    { .type = 'r', .name = "_do_fork" },
-    { .type = 'r', .name = "__close_fd" },
-    { .type = 'p', .name = "try_to_wake_up" },
-    { .type = 'r', .name = "__x64_sys_clone" },
-    { .type = 0, .name = NULL }
-};
-
-netdata_ebpf_events_t socket_probes[] = {
-    { .type = 'p', .name = "tcp_cleanup_rbuf" },
-    { .type = 'p', .name = "tcp_close" },
-    { .type = 'p', .name = "udp_recvmsg" },
-    { .type = 'r', .name = "udp_recvmsg" },
-    { .type = 'r', .name = "udp_sendmsg" },
-    { .type = 'p', .name = "do_exit" },
-    { .type = 'p', .name = "tcp_sendmsg" },
-    { .type = 'r', .name = "tcp_sendmsg" },
-    { .type = 0, .name = NULL }
-};
-
 ebpf_module_t ebpf_modules[] = {
     { .thread_name = "process", .config_name = "process", .enabled = 0, .start_routine = ebpf_process_thread,
-      .update_time = 1, .global_charts = 1, .apps_charts = 1, .mode = MODE_ENTRY, .probes = process_probes,
+      .update_time = 1, .global_charts = 1, .apps_charts = 1, .mode = MODE_ENTRY,
       .optional = 0 },
-    { .thread_name = "socket", .config_name = "network viewer", .enabled = 0, .start_routine = ebpf_socket_thread,
-      .update_time = 1, .global_charts = 1, .apps_charts = 1, .mode = MODE_ENTRY, .probes = socket_probes,
+    { .thread_name = "socket", .config_name = "socket", .enabled = 0, .start_routine = ebpf_socket_thread,
+      .update_time = 1, .global_charts = 1, .apps_charts = 1, .mode = MODE_ENTRY,
       .optional = 0  },
     { .thread_name = NULL, .enabled = 0, .start_routine = NULL, .update_time = 1,
-      .global_charts = 0, .apps_charts = 1, .mode = MODE_ENTRY, .probes = NULL,
+      .global_charts = 0, .apps_charts = 1, .mode = MODE_ENTRY,
       .optional = 0 },
 };
 
@@ -119,10 +91,7 @@ ebpf_module_t ebpf_modules[] = {
 ebpf_process_stat_t *global_process_stat = NULL;
 
 //Network viewer
-ebpf_network_viewer_options_t network_viewer_opt = { .max_dim = NETDATA_NV_CAP_VALUE, .hostname_resolution_enabled = 0,
-                                                     .service_resolution_enabled = 0, .excluded_port = NULL,
-                                                     .included_port = NULL, .names = NULL, .ipv4_local_ip = NULL,
-                                                     .ipv6_local_ip = NULL };
+ebpf_network_viewer_options_t network_viewer_opt;
 
 /*****************************************************************
  *
@@ -167,15 +136,6 @@ static void clean_ip_structure(ebpf_network_viewer_ip_list_t **clean)
         move = next;
     }
     *clean = NULL;
-}
-
-static void change_events()
-{
-    if (ebpf_modules[0].mode == MODE_ENTRY)
-        change_process_event();
-
-    if (ebpf_modules[1].mode == MODE_ENTRY)
-        change_socket_event();
 }
 
 /**
@@ -863,25 +823,6 @@ static inline void how_to_load(char *ptr)
 }
 
 /**
- * Parse disable apps option
- *
- * @param ptr the option given by users
- *
- * @return It returns 1 to disable the charts or 0 otherwise.
- */
-static inline int parse_disable_apps(char *ptr)
-{
-    if (!strcasecmp(ptr, "yes")) {
-        ebpf_disable_apps();
-        return 1;
-    } else if (strcasecmp(ptr, "no") != 0) {
-        error("The option %s for \"disable apps\" is not a valid option.", ptr);
-    }
-
-    return 0;
-}
-
-/**
  * Fill Port list
  *
  * @param out a pointer to the link list.
@@ -1556,12 +1497,12 @@ static void parse_network_viewer_section()
     network_viewer_opt.hostname_resolution_enabled = appconfig_get_boolean(&collector_config,
                                                                        EBPF_NETWORK_VIEWER_SECTION,
                                                                        "resolve hostnames",
-                                                                       0);
+                                                                       CONFIG_BOOLEAN_NO);
 
     network_viewer_opt.service_resolution_enabled = appconfig_get_boolean(&collector_config,
                                                                            EBPF_NETWORK_VIEWER_SECTION,
                                                                            "resolve service names",
-                                                                           0);
+                                                                           CONFIG_BOOLEAN_NO);
 
     char *value = appconfig_get(&collector_config, EBPF_NETWORK_VIEWER_SECTION,
                                 "ports", NULL);
@@ -1575,7 +1516,7 @@ static void parse_network_viewer_section()
     }
 
     value = appconfig_get(&collector_config, EBPF_NETWORK_VIEWER_SECTION,
-                          "ips", "!127.0.0.1/8 10.0.0.0/8 172.16.0.0/12 192.168.0.0/16 fc00::/7");
+                          "ips", "!127.0.0.1/8 10.0.0.0/8 172.16.0.0/12 192.168.0.0/16 fc00::/7 !::1/128");
     parse_ips(value);
 }
 
@@ -1674,19 +1615,33 @@ static void read_collector_values(int *disable_apps)
 
     how_to_load(value);
 
-    value = appconfig_get(&collector_config, EBPF_GLOBAL_SECTION, "disable apps", "no");
-    *disable_apps = parse_disable_apps(value);
+    // This is kept to keep compatibility
+    uint32_t enabled = appconfig_get_boolean(&collector_config, EBPF_GLOBAL_SECTION, "disable apps",
+                                             CONFIG_BOOLEAN_NO);
+    if (!enabled) {
+        // Apps is a positive sentence, so we need to invert the values to disable apps.
+        enabled = appconfig_get_boolean(&collector_config, EBPF_GLOBAL_SECTION, "apps",
+                                        CONFIG_BOOLEAN_YES);
+        enabled =  (enabled == CONFIG_BOOLEAN_NO)?CONFIG_BOOLEAN_YES:CONFIG_BOOLEAN_NO;
+    }
+    *disable_apps = (int)enabled;
 
     // Read ebpf programs section
-    uint32_t enabled = appconfig_get_boolean(&collector_config, EBPF_PROGRAMS_SECTION, ebpf_modules[0].config_name,
-                                             1);
+    enabled = appconfig_get_boolean(&collector_config, EBPF_PROGRAMS_SECTION,
+                                    ebpf_modules[0].config_name, CONFIG_BOOLEAN_YES);
     int started = 0;
     if (enabled) {
         ebpf_enable_chart(EBPF_MODULE_PROCESS_IDX, *disable_apps);
         started++;
     }
 
-    enabled = appconfig_get_boolean(&collector_config, EBPF_PROGRAMS_SECTION, ebpf_modules[1].config_name, 1);
+    // This is kept to keep compatibility
+    enabled = appconfig_get_boolean(&collector_config, EBPF_PROGRAMS_SECTION, "network viewer",
+                                    CONFIG_BOOLEAN_NO);
+    if (!enabled)
+        enabled = appconfig_get_boolean(&collector_config, EBPF_PROGRAMS_SECTION, ebpf_modules[1].config_name,
+                                        CONFIG_BOOLEAN_NO);
+
     if (enabled) {
         ebpf_enable_chart(EBPF_MODULE_SOCKET_IDX, *disable_apps);
         // Read network viewer section if network viewer is enabled
@@ -1695,8 +1650,12 @@ static void read_collector_values(int *disable_apps)
         started++;
     }
 
+    // This is kept to keep compatibility
     enabled = appconfig_get_boolean(&collector_config, EBPF_PROGRAMS_SECTION, "network connection monitoring",
-                                    0);
+                                    CONFIG_BOOLEAN_NO);
+    if (!enabled)
+        enabled = appconfig_get_boolean(&collector_config, EBPF_PROGRAMS_SECTION, "network connections",
+                                        CONFIG_BOOLEAN_NO);
     ebpf_modules[1].optional = enabled;
 
     if (!started){
@@ -1782,6 +1741,9 @@ static void parse_args(int argc, char **argv)
         {"return",   no_argument,    0,  'r' },
         {0, 0, 0, 0}
     };
+
+    memset(&network_viewer_opt, 0, sizeof(network_viewer_opt));
+    network_viewer_opt.max_dim = NETDATA_NV_CAP_VALUE;
 
     if (argc > 1) {
         int n = (int)str2l(argv[1]);
@@ -1967,7 +1929,6 @@ int main(int argc, char **argv)
         {NULL          , NULL, NULL, 0, NULL, NULL, NULL}
     };
 
-    change_events();
     //clean_loaded_events();
 
     int i;

@@ -116,7 +116,7 @@ SUBDIRS += \
     web \
     claim \
     parser \
-    aclk \
+    aclk/legacy \
     spawn \
     $(NULL)
 
@@ -366,6 +366,7 @@ RRD_PLUGIN_FILES = \
     database/rrddimvar.h \
     database/rrdfamily.c \
     database/rrdhost.c \
+    database/rrdlabels.c \
     database/rrd.c \
     database/rrd.h \
     database/rrdset.c \
@@ -377,6 +378,10 @@ RRD_PLUGIN_FILES = \
 
 if ENABLE_DBENGINE
     RRD_PLUGIN_FILES += \
+        database/sqlite/sqlite_functions.c \
+        database/sqlite/sqlite_functions.h \
+        database/sqlite/sqlite3.c \
+        database/sqlite/sqlite3.h \
         database/engine/rrdengine.c \
         database/engine/rrdengine.h \
         database/engine/rrddiskprotocol.h \
@@ -392,7 +397,6 @@ if ENABLE_DBENGINE
         database/engine/pagecache.h \
         database/engine/rrdenglocking.c \
         database/engine/rrdenglocking.h \
-        database/engine/metadata_log/metadatalog.c \
         database/engine/metadata_log/metadatalog.h \
         database/engine/metadata_log/metadatalogapi.c \
         database/engine/metadata_log/metadatalogapi.h \
@@ -403,8 +407,6 @@ if ENABLE_DBENGINE
         database/engine/metadata_log/metalogpluginsd.h \
         database/engine/metadata_log/compaction.c \
         database/engine/metadata_log/compaction.h \
-        database/engine/global_uuid_map/global_uuid_map.c \
-        database/engine/global_uuid_map/global_uuid_map.h \
         $(NULL)
 endif
 
@@ -522,26 +524,27 @@ PARSER_FILES = \
     $(NULL)
 
 ACLK_FILES = \
-    aclk/aclk_common.c \
-    aclk/aclk_common.h \
-    aclk/aclk_stats.c \
-    aclk/aclk_stats.h
+    aclk/legacy/aclk_rrdhost_state.h \
+    aclk/legacy/aclk_common.c \
+    aclk/legacy/aclk_common.h \
+    aclk/legacy/aclk_stats.c \
+    aclk/legacy/aclk_stats.h \
     $(NULL)
 
 if ENABLE_ACLK
 ACLK_FILES += \
-    aclk/agent_cloud_link.c \
-    aclk/agent_cloud_link.h \
-    aclk/aclk_query.c \
-    aclk/aclk_query.h \
-    aclk/mqtt.c \
-    aclk/mqtt.h \
-    aclk/aclk_rx_msgs.c \
-    aclk/aclk_rx_msgs.h \
-    aclk/aclk_lws_wss_client.c \
-    aclk/aclk_lws_wss_client.h \
-    aclk/aclk_lws_https_client.c \
-    aclk/aclk_lws_https_client.h \
+    aclk/legacy/agent_cloud_link.c \
+    aclk/legacy/agent_cloud_link.h \
+    aclk/legacy/aclk_query.c \
+    aclk/legacy/aclk_query.h \
+    aclk/legacy/mqtt.c \
+    aclk/legacy/mqtt.h \
+    aclk/legacy/aclk_rx_msgs.c \
+    aclk/legacy/aclk_rx_msgs.h \
+    aclk/legacy/aclk_lws_wss_client.c \
+    aclk/legacy/aclk_lws_wss_client.h \
+    aclk/legacy/aclk_lws_https_client.c \
+    aclk/legacy/aclk_lws_https_client.h \
     $(NULL)
 endif
 
@@ -853,6 +856,7 @@ if ENABLE_UNITTESTS
         exporting/tests/exporting_engine_testdriver \
         web/api/tests/web_api_testdriver \
         web/api/tests/valid_urls_testdriver \
+        collectors/cgroups_plugin/tests/cgroups_testdriver \
         $(NULL)
 
     TESTS = $(check_PROGRAMS)
@@ -1005,4 +1009,19 @@ if ENABLE_BACKEND_MONGODB
         -Wl,--wrap=mongoc_collection_insert_many \
         $(NULL)
 endif
+
+    collectors_cgroups_plugin_tests_cgroups_testdriver_SOURCES = \
+        collectors/cgroups.plugin/tests/test_cgroups_plugin.c \
+        collectors/cgroups.plugin/tests/test_cgroups_plugin.h \
+        collectors/cgroups.plugin/tests/test_doubles.c \
+        $(CGROUPS_PLUGIN_FILES) \
+        database/rrdlabels.c \
+        database/rrd.h \
+        $(LIBNETDATA_FILES) \
+        $(NULL)
+    collectors_cgroups_plugin_tests_cgroups_testdriver_LDADD = $(NETDATA_COMMON_LIBS) $(TEST_LIBS)
+    collectors_cgroups_plugin_tests_cgroups_testdriver_LDFLAGS = \
+        -Wl,--wrap=add_label_to_list \
+        $(NULL)
+
 endif

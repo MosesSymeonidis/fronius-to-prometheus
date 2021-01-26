@@ -2,12 +2,6 @@
 
 #include "health.h"
 
-struct health_cmdapi_thread_status {
-    int status;
-    ;
-    struct rusage rusage;
-};
-
 unsigned int default_health_enabled = 1;
 char *silencers_filename;
 
@@ -85,7 +79,7 @@ inline char *health_stock_config_dir(void) {
  *
  * Function used to initialize the silencer structure.
  */
-void health_silencers_init(void) {
+static void health_silencers_init(void) {
     FILE *fd = fopen(silencers_filename, "r");
     if (fd) {
         fseek(fd, 0 , SEEK_END);
@@ -141,7 +135,7 @@ void health_init(void) {
  *
  * @param host the structure of the host that the function will reload the configuration.
  */
-void health_reload_host(RRDHOST *host) {
+static void health_reload_host(RRDHOST *host) {
     if(unlikely(!host->health_enabled))
         return;
 
@@ -501,8 +495,10 @@ static inline int rrdcalc_isrunnable(RRDCALC *rc, time_t now, time_t *next_run) 
     }
 
     int update_every = rc->rrdset->update_every;
-    time_t first = rrdset_first_entry_t(rc->rrdset);
-    time_t last = rrdset_last_entry_t(rc->rrdset);
+    rrdset_rdlock(rc->rrdset);
+    time_t first = rrdset_first_entry_t_nolock(rc->rrdset);
+    time_t last = rrdset_last_entry_t_nolock(rc->rrdset);
+    rrdset_unlock(rc->rrdset);
 
     if(unlikely(now + update_every < first /* || now - update_every > last */)) {
         debug(D_HEALTH
@@ -553,7 +549,7 @@ static void health_main_cleanup(void *ptr) {
     static_thread->enabled = NETDATA_MAIN_THREAD_EXITED;
 }
 
-SILENCE_TYPE check_silenced(RRDCALC *rc, char* host, SILENCERS *silencers) {
+static SILENCE_TYPE check_silenced(RRDCALC *rc, char* host, SILENCERS *silencers) {
     SILENCER *s;
     debug(D_HEALTH, "Checking if alarm was silenced via the command API. Alarm info name:%s context:%s chart:%s host:%s family:%s",
             rc->name, (rc->rrdset)?rc->rrdset->context:"", rc->chart, host, (rc->rrdset)?rc->rrdset->family:"");
@@ -595,7 +591,7 @@ SILENCE_TYPE check_silenced(RRDCALC *rc, char* host, SILENCERS *silencers) {
  *
  * @return It returns 1 case rrdcalc_flags is DISABLED or 0 otherwise
  */
-int update_disabled_silenced(RRDHOST *host, RRDCALC *rc) {
+static int update_disabled_silenced(RRDHOST *host, RRDCALC *rc) {
     uint32_t rrdcalc_flags_old = rc->rrdcalc_flags;
     // Clear the flags
     rc->rrdcalc_flags &= ~(RRDCALC_FLAG_DISABLED | RRDCALC_FLAG_SILENCED);
