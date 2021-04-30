@@ -31,6 +31,7 @@ class CustomCollector(object):
         try:
             sensors_request = requests.get(f"http://{url}/{sensors_path}", timeout=timeout).json()
             sensor_data, timestamp = self.get_data_and_timestamp(sensors_request)
+            print(sensor_data)
             yield self.__temperature_top(sensor_data, timestamp, prefix)
             yield self.__temperature_bottom(sensor_data, timestamp, prefix)
             yield self.__watts_per_sqm(sensor_data, timestamp, prefix)
@@ -49,14 +50,14 @@ class CustomCollector(object):
         return sensor_data, timestamp
 
     def __temperature_top(self, sensor_data, timestamp, prefix):
-        value = sensor_data.get(0, {}).get("Value", 0.0)
+        value = sensor_data.get('0', {}).get("Value", 0.0)
         value = value if value else 0.0
         c = GaugeMetricFamily(f'{prefix}temperature_output_C_average', '', labels=['chart', 'family', 'dimension'])
         c.add_metric(value=value, labels=['fronius_GetSensorRealtimeData.temperature.top.output', 'sensors', 'temperature'], timestamp=timestamp)
         return c
 
     def __temperature_bottom(self, sensor_data, timestamp, prefix):
-        value = sensor_data.get(1, {}).get("Value", 0.0)
+        value = sensor_data.get('1', {}).get("Value", 0.0)
         value = value if value else 0.0
         c = GaugeMetricFamily(f'{prefix}temperature_output_C_average', '', labels=['chart', 'family', 'dimension'])
         c.add_metric(value=value,
@@ -65,7 +66,7 @@ class CustomCollector(object):
         return c
 
     def __watts_per_sqm(self, sensor_data, timestamp, prefix):
-        value = sensor_data.get(2, {}).get("Value", 0.0)
+        value = sensor_data.get('2', {}).get("Value", 0.0)
         value = value if value else 0.0
         c = GaugeMetricFamily(f'{prefix}fronius_watts_per_sqm_output_W_m2_average', '', labels=['chart', 'family', 'dimension'])
         c.add_metric(value=value,
@@ -74,7 +75,7 @@ class CustomCollector(object):
         return c
 
     def __wind_speed(self, sensor_data, timestamp, prefix):
-        value = sensor_data.get(3, {}).get("Value", 0.0)
+        value = sensor_data.get('3', {}).get("Value", 0.0)
         value = value if value else 0.0
         c = GaugeMetricFamily(f'{prefix}fronius_wind_speed_output_km_h_average', '',
                               labels=['chart', 'family', 'dimension'])
