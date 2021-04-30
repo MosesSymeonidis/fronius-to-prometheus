@@ -1,10 +1,10 @@
 from datetime import datetime
 import os
 from venv import logger
-
 import requests
 from prometheus_client.metrics_core import GaugeMetricFamily
 from prometheus_client.registry import CollectorRegistry
+
 url = os.getenv("FRONIUS_URL", "froniusucy.in.cs.ucy.ac.cy")
 sensors_path = os.getenv("FRONIUS_SENSORS_PATH", "solar_api/v1/GetSensorRealtimeData.cgi?Scope=Device&DataCollection=NowSensorData&DeviceId=1")
 pv_path = os.getenv("FRONIUS_PV_PATH", "solar_api/v1/GetPowerFlowRealtimeData.fcgi")
