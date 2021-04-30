@@ -52,14 +52,14 @@ class CustomCollector(object):
     def __temperature_top(self, sensor_data, timestamp, prefix):
         value = sensor_data.get('0', {}).get("Value", 0.0)
         value = value if value else 0.0
-        c = GaugeMetricFamily(f'{prefix}temperature_output_C_average', '', labels=['chart', 'family', 'dimension'])
+        c = GaugeMetricFamily(f'{prefix}fronius_temperature_output_C_average', '', labels=['chart', 'family', 'dimension'])
         c.add_metric(value=value, labels=['fronius_GetSensorRealtimeData.temperature.top.output', 'sensors', 'temperature'], timestamp=timestamp)
         return c
 
     def __temperature_bottom(self, sensor_data, timestamp, prefix):
         value = sensor_data.get('1', {}).get("Value", 0.0)
         value = value if value else 0.0
-        c = GaugeMetricFamily(f'{prefix}temperature_output_C_average', '', labels=['chart', 'family', 'dimension'])
+        c = GaugeMetricFamily(f'{prefix}fronius_temperature_output_C_average', '', labels=['chart', 'family', 'dimension'])
         c.add_metric(value=value,
                      labels=['fronius_GetSensorRealtimeData.temperature.bottom.output', 'sensors', 'temperature'],
                      timestamp=timestamp)
