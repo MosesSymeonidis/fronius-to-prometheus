@@ -12,32 +12,38 @@ prefix = os.getenv("PREFIX", "cyprus__nicosia__ucy__dc1__fronius_")
 timeout = os.getenv("FRONIUS_TIMEOUT", 15)
 registry = CollectorRegistry()
 class CustomCollector(object):
+    __stored_data = {}
+
     def collect(self):
         try:
             power_request = requests.get(f"http://{url}/{pv_path}", timeout=timeout).json()
-            power_data, timestamp = self.get_data_and_timestamp(power_request)
-            site = power_data.get('Site')
-            inverters = power_data.get('Inverters')
-            for id_, inverter in inverters.items():
-                yield self.__inverter_output(id_, inverter, timestamp, prefix)
-            yield self.__overall_pvs(site, timestamp, prefix)
-            yield self.__overall_grid(site, timestamp, prefix)
-            yield self.__overall_accumulator(site, timestamp, prefix)
-            yield self.__E_Year(site, timestamp, prefix)
-            yield self.__E_Day(site, timestamp, prefix)
+            self.__stored_data['power_request'] = power_request
         except Exception:
             logger.error("Exception during PVs' data request")
+            power_request = self.__stored_data.get('power_request', {})
+        power_data, timestamp = self.get_data_and_timestamp(power_request)
+        site = power_data.get('Site')
+        inverters = power_data.get('Inverters')
+        for id_, inverter in inverters.items():
+            yield self.__inverter_output(id_, inverter, timestamp, prefix)
+        yield self.__overall_pvs(site, timestamp, prefix)
+        yield self.__overall_grid(site, timestamp, prefix)
+        yield self.__overall_accumulator(site, timestamp, prefix)
+        yield self.__E_Year(site, timestamp, prefix)
+        yield self.__E_Day(site, timestamp, prefix)
 
         try:
             sensors_request = requests.get(f"http://{url}/{sensors_path}", timeout=timeout).json()
-            sensor_data, timestamp = self.get_data_and_timestamp(sensors_request)
-            print(sensor_data)
-            yield self.__temperature_top(sensor_data, timestamp, prefix)
-            yield self.__temperature_bottom(sensor_data, timestamp, prefix)
-            yield self.__watts_per_sqm(sensor_data, timestamp, prefix)
-            yield self.__wind_speed(sensor_data, timestamp, prefix)
+            self.__stored_data['sensors_request'] = sensors_request
         except Exception:
             logger.error("Exception during sensors' data request")
+            sensors_request = self.__stored_data.get('sensors_request', {})
+
+        sensor_data, timestamp = self.get_data_and_timestamp(sensors_request)
+        yield self.__temperature_top(sensor_data, timestamp, prefix)
+        yield self.__temperature_bottom(sensor_data, timestamp, prefix)
+        yield self.__watts_per_sqm(sensor_data, timestamp, prefix)
+        yield self.__wind_speed(sensor_data, timestamp, prefix)
 
 
 
