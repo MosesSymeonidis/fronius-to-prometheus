@@ -5,11 +5,12 @@ import requests
 from prometheus_client.metrics_core import GaugeMetricFamily
 from prometheus_client.registry import CollectorRegistry
 
-url = os.getenv("FRONIUS_URL", "froniusucy.in.cs.ucy.ac.cy")
-sensors_path = os.getenv("FRONIUS_SENSORS_PATH", "solar_api/v1/GetSensorRealtimeData.cgi?Scope=Device&DataCollection=NowSensorData&DeviceId=1")
-pv_path = os.getenv("FRONIUS_PV_PATH", "solar_api/v1/GetPowerFlowRealtimeData.fcgi")
-prefix = os.getenv("PREFIX", "cyprus__nicosia__ucy__dc1__fronius_")
-timeout = os.getenv("FRONIUS_TIMEOUT", 15)
+url = str(os.getenv("FRONIUS_URL", "froniusucy.in.cs.ucy.ac.cy"))
+sensors_path = str(os.getenv("FRONIUS_SENSORS_PATH", "solar_api/v1/GetSensorRealtimeData.cgi?Scope=Device&DataCollection=NowSensorData&DeviceId=1"))
+pv_path = str(os.getenv("FRONIUS_PV_PATH", "solar_api/v1/GetPowerFlowRealtimeData.fcgi"))
+prefix = str(os.getenv("PREFIX", "cyprus__nicosia__ucy__dc1__fronius_"))
+timeout = int(os.getenv("FRONIUS_TIMEOUT", 15))
+
 registry = CollectorRegistry()
 class CustomCollector(object):
     __stored_data = {}
