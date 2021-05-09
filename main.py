@@ -22,8 +22,8 @@ class CustomCollector(object):
             logger.error("Exception during PVs' data request")
             power_request = self.__stored_data.get('power_request', {})
         power_data, timestamp = self.get_data_and_timestamp(power_request)
-        site = power_data.get('Site')
-        inverters = power_data.get('Inverters')
+        site = power_data.get('Site', {})
+        inverters = power_data.get('Inverters', {})
         for id_, inverter in inverters.items():
             yield self.__inverter_output(id_, inverter, timestamp, prefix)
         yield self.__overall_pvs(site, timestamp, prefix)
